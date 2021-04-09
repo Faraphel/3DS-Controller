@@ -13,6 +13,7 @@ class AppClass():
     def __init__(self):
         self.root = Tk()
         self.root.title("3DS Controller - Faraphel")
+        self.root.resizable(False, False)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Internet & UDP
         self.port = 8889
         self.key = []
@@ -29,7 +30,7 @@ class AppClass():
             self.imgtk[name] = ImageTk.PhotoImage(self.img[name])
 
         self.Canvas3DS = Canvas(self.root, width=self.img["3DS"].width, height=self.img["3DS"].height)
-        self.Canvas3DS.grid(row = 1, column = 1, columnspan = 2)
+        self.Canvas3DS.grid(row = 1, column = 1, columnspan = 4)
         
         w, h = self.img["3DS"].width, self.img["3DS"].height
         self.Canvas3DS.create_image(w//2, h//2, image=self.imgtk["3DS"])
@@ -37,8 +38,11 @@ class AppClass():
         self.label_coordinate = Label(self.root, text="???")
         self.label_coordinate.grid(row = 2, column = 1, sticky = "NEWS")
 
-        self.button_option = Button(self.root, text = "Paramètres...", relief = RIDGE, command = self.option_menu)
-        self.button_option.grid(row = 2, column = 2, sticky = "E")
+        self.button_option = Button(self.root, text = "Paramètre", relief = RIDGE, command = self.option_menu)
+        self.button_option.grid(row = 2, column = 3, sticky = "EW")
+
+        self.button_option = Button(self.root, text="Quitter", relief=RIDGE, command=self.root.destroy)
+        self.button_option.grid(row=2, column=4, sticky="EW")
 
 
         self.connect()
@@ -134,6 +138,7 @@ class AppClass():
 
 
     def update_tk(self):
+        while True:
             ox, oy = 0, 0
             widget_3DS = []
             
@@ -161,8 +166,6 @@ class AppClass():
                 elif "oDown" in self.key: oy = 10
 
             widget_3DS.append( self.Canvas3DS.create_image(63+ox, 312+oy, image=self.imgtk["joystick"]) )
-            for widget in self.widget_3DS: self.Canvas3DS.delete(widget)
-            self.widget_3DS = widget_3DS
 
             if "Tap" in self.key:
                 DS_X = 122 + (212 / 314) * self.screenX
@@ -178,7 +181,11 @@ class AppClass():
             else:
                 self.mouse.release(mouse.Button.left)
 
-            self.root.after(self.tick, self.update_tk)
+
+            for widget in self.widget_3DS: self.Canvas3DS.delete(widget)
+            self.widget_3DS = widget_3DS
+
+            self.Canvas3DS.update()
         
 
     def update_key(self): pass
