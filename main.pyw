@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import colorchooser
 import socket
 from threading import Thread
 from PIL import Image, ImageTk, ImageGrab
@@ -6,6 +7,7 @@ import os
 from pynput import mouse
 import time
 import pyvjoy
+import json
 
 STOP = False
 
@@ -14,13 +16,20 @@ class AppClass():
         self.root = Tk()
         self.root.title("3DS Controller - Faraphel")
         self.root.resizable(False, False)
+        try: self.root.iconphoto(True, ImageTk.PhotoImage(file="./icon.ico"))
+        except: pass
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Internet & UDP
-        self.port = 8889
-        self.key = []
-        self.tick = 20
-        self.widget_3DS = []
-        self.WIN_p1, self.WIN_p2 = (0, 0), (self.root.winfo_screenwidth(), self.root.winfo_screenheight())
         self.mouse = mouse.Controller()
+
+        self.port = option["port"]
+        self.key = []
+        self.widget_3DS = []
+        self.mousePressed = False
+        if option["WIN_p1"]: self.WIN_p1 = option["WIN_p1"]
+        else: self.WIN_p1 = (0, 0)
+        if option["WIN_p2"]: self.WIN_p2 = option["WIN_p2"]
+        else: self.WIN_p2 = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
 
         self.img = {}
         self.imgtk = {}
@@ -29,11 +38,11 @@ class AppClass():
             self.img[name] = Image.open(f"./assets/{name}.png")
             self.imgtk[name] = ImageTk.PhotoImage(self.img[name])
 
-        self.Canvas3DS = Canvas(self.root, width=self.img["3DS"].width, height=self.img["3DS"].height)
+        self.Canvas3DS = Canvas(self.root, width=self.img["3DS"].width + 40, height=self.img["3DS"].height + 40, bg=option["bgcolor"] if option["bgcolor"] else 'SystemButtonFace')
         self.Canvas3DS.grid(row = 1, column = 1, columnspan = 4)
         
         w, h = self.img["3DS"].width, self.img["3DS"].height
-        self.Canvas3DS.create_image(w//2, h//2, image=self.imgtk["3DS"])
+        self.Canvas3DS.create_image(w//2 + 20, h//2 + 20, image=self.imgtk["3DS"])
 
         self.label_coordinate = Label(self.root, text="???")
         self.label_coordinate.grid(row = 2, column = 1, sticky = "NEWS")
@@ -46,18 +55,32 @@ class AppClass():
 
 
         self.connect()
-        self.root.after(self.tick, self.update_tk)
+        self.root.after(0, self.update_tk)
         self.root.mainloop()
 
 
-    def option_menu(self):
-        optionTL = Toplevel()
+    def save_option(self):
+        with open("./option.json", "w") as f:
+            json.dump(option, f)
 
-        Label(optionTL, text="IP : ").grid(row=1, column=1)
+
+    def option_menu(self):
+        try: self.optionTL.destroy()
+        except: pass
+        self.optionTL = Toplevel()
+
+        option_connect = LabelFrame(self.optionTL, text="Connectivité")
+        option_connect.grid(row=1, column=1, sticky="NEWS")
+        Label(option_connect, text="IP : ").grid(row=1, column=1)
         
-        option_ip = Listbox(optionTL, height = 3)
+        option_ip = Listbox(option_connect, height=3)
         for ip in socket.gethostbyname_ex(socket.gethostname())[-1]: option_ip.insert(0, ip)
-        option_ip.grid(row=1, column=2)
+        def show_ip():
+            option_ip.grid(row=1, column=2)
+            button_show_ip.grid_forget()
+
+        button_show_ip = Button(option_connect, text="Afficher l'IP local", command=show_ip, relief=RIDGE)
+        button_show_ip.grid(row=1, column=2)
 
 
         def get_borderpoint():
@@ -113,19 +136,35 @@ class AppClass():
 
             def confirm(event):
                 borderpointTL.destroy()
+                option["WIN_p1"] = self.WIN_p1
+                option["WIN_p2"] = self.WIN_p2
+                self.save_option()
                 option_label_borderpoint.config(text = f"({self.WIN_p1[0]}, {self.WIN_p1[1]}; {self.WIN_p2[0]}, {self.WIN_p2[1]})")
 
             borderpointCvn.tag_bind(screenID, "<Button-1>", point1)
             borderpointCvn.bind("<Button-3>", point2)
-            
-            
 
-        option_borderpoint = Button(optionTL, text="Définir les bordures de l'écran tactile", relief=RIDGE, command = get_borderpoint)
-        option_borderpoint.grid(row=2, column=1)
+        option_touchscreen = LabelFrame(self.optionTL, text="Ecran tactile")
+        option_touchscreen.grid(row=2, column=1)
+        button_borderpoint = Button(option_touchscreen, text="Définir les bordures de l'écran tactile", relief=RIDGE, command = get_borderpoint)
+        button_borderpoint.grid(row=1, column=1)
 
-        option_label_borderpoint = Label(optionTL, text = f"({self.WIN_p1[0]}, {self.WIN_p1[1]}; {self.WIN_p2[0]}, {self.WIN_p2[1]})")
-        option_label_borderpoint.grid(row=2, column=2)
-        
+        option_label_borderpoint = Label(option_touchscreen, text = f"({self.WIN_p1[0]}, {self.WIN_p1[1]}; {self.WIN_p2[0]}, {self.WIN_p2[1]})")
+        option_label_borderpoint.grid(row=1, column=2)
+
+        def select_bgcolor():
+            option_bgcolor = colorchooser.askcolor()
+            if option_bgcolor:
+                self.Canvas3DS.config(bg = option_bgcolor[-1])
+                option["bgcolor"] = option_bgcolor[-1]
+                self.save_option()
+
+
+        option_visual = LabelFrame(self.optionTL, text="Visuel")
+        option_visual.grid(row=3, column=1, sticky="NEWS")
+
+        option_bgcolor = Button(option_visual, text="Couleur d'arrière plan", relief=RIDGE, command=select_bgcolor)
+        option_bgcolor.grid(row=1, column=1)
 
 
     def connect(self):
@@ -143,21 +182,21 @@ class AppClass():
             widget_3DS = []
             
             if self.key:
-                if "L" in self.key: widget_3DS.append( self.Canvas3DS.create_image(30, 234, image=self.imgtk["L"]) )
-                if "R" in self.key: widget_3DS.append( self.Canvas3DS.create_image(429, 234, image=self.imgtk["R"]) )
+                if "L" in self.key: widget_3DS.append( self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"]) )
+                if "R" in self.key: widget_3DS.append( self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"]) )
 
-                if "X" in self.key: widget_3DS.append( self.Canvas3DS.create_image(396, 292, image=self.imgtk["X"]) )
-                if "Y" in self.key: widget_3DS.append( self.Canvas3DS.create_image(371, 318, image=self.imgtk["Y"]) )
-                if "A" in self.key: widget_3DS.append( self.Canvas3DS.create_image(422, 318, image=self.imgtk["A"]) )
-                if "B" in self.key: widget_3DS.append( self.Canvas3DS.create_image(395, 344, image=self.imgtk["B"]) )
+                if "X" in self.key: widget_3DS.append( self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"]) )
+                if "Y" in self.key: widget_3DS.append( self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"]) )
+                if "A" in self.key: widget_3DS.append( self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"]) )
+                if "B" in self.key: widget_3DS.append( self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"]) )
 
-                if "+Left" in self.key: widget_3DS.append( self.Canvas3DS.create_image(78, 395, image=self.imgtk["hl"]) )
-                elif "+Right" in self.key: widget_3DS.append( self.Canvas3DS.create_image(45, 395, image=self.imgtk["hl"]) )
-                elif "+Up" in self.key: widget_3DS.append( self.Canvas3DS.create_image(61, 378, image=self.imgtk["vl"]) )
-                elif "+Down" in self.key: widget_3DS.append( self.Canvas3DS.create_image(61, 412, image=self.imgtk["vl"]) )
+                if "+Left" in self.key: widget_3DS.append( self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"]) )
+                elif "+Right" in self.key: widget_3DS.append( self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"]) )
+                elif "+Up" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"]) )
+                elif "+Down" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"]) )
 
-                elif "Select" in self.key: widget_3DS.append( self.Canvas3DS.create_image(158, 446, image=self.imgtk["SELECT"]) )
-                elif "Start" in self.key: widget_3DS.append( self.Canvas3DS.create_image(299, 446, image=self.imgtk["START"]) )
+                elif "Select" in self.key: widget_3DS.append( self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"]) )
+                elif "Start" in self.key: widget_3DS.append( self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"]) )
 
                 if "oLeft" in self.key: ox = 10
                 elif "oRight" in self.key: ox = -10
@@ -165,11 +204,11 @@ class AppClass():
                 if "oUp" in self.key: oy = -10
                 elif "oDown" in self.key: oy = 10
 
-            widget_3DS.append( self.Canvas3DS.create_image(63+ox, 312+oy, image=self.imgtk["joystick"]) )
+            widget_3DS.append( self.Canvas3DS.create_image(83+ox, 332+oy, image=self.imgtk["joystick"]) )
 
             if "Tap" in self.key:
-                DS_X = 122 + (212 / 314) * self.screenX
-                DS_Y = 264 + (161 / 117) * self.screenY
+                DS_X = 142 + (212 / 314) * self.screenX
+                DS_Y = 284 + (161 / 117) * self.screenY
                 widget_3DS.append( self.Canvas3DS.create_rectangle(DS_X-2, DS_Y-2, DS_X+2, DS_Y+2, outline = "red") )
                 self.label_coordinate.config(text = f"x={self.screenX}, y={self.screenY}")
 
@@ -177,18 +216,16 @@ class AppClass():
                 WIN_Y = self.WIN_p1[1] + ((self.WIN_p2[1]-self.WIN_p1[1]) / 117) * self.screenY
                 self.mouse.position = (WIN_X, WIN_Y)
                 self.mouse.press(mouse.Button.left)
+                self.mousePressed = True
 
-            else:
+            elif self.mousePressed: 
                 self.mouse.release(mouse.Button.left)
-
+                self.mousePressed = False
 
             for widget in self.widget_3DS: self.Canvas3DS.delete(widget)
             self.widget_3DS = widget_3DS
 
             self.Canvas3DS.update()
-        
-
-    def update_key(self): pass
 
 
     def recv(self):
@@ -200,11 +237,26 @@ class AppClass():
             self.screenY = int(b[105:112], base=2)
 
             key = []
-            
-            if b[52] == "1": key.append("oLeft")
-            if b[51] == "1": key.append("oRight")
-            if b[50] == "1": key.append("oUp")
-            if b[49] == "1": key.append("oDown")
+
+            _x = int(b[57:65], base=2)
+            if b[52] == "1":
+                key.append("oLeft")
+                self.joystickX = 32 + (_x) if 32+(_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+            elif b[51] == "1":
+                key.append("oRight")
+                self.joystickX = (_x)-127 if (_x)-127 > 0 else 0
+            else: self.joystickX = 64
+
+
+            _y = int(b[73:81], base=2)
+            if b[50] == "1":
+                key.append("oUp")
+                self.joystickY = (_y)-127 if (_y)-127 > 0 else 0
+            elif b[49] == "1":
+                key.append("oDown")
+                self.joystickY = 32 + (_y) if 32+(_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+            else: self.joystickY = 64
+
             
             if b[44] == "1": key.append("Tap")
             
@@ -220,14 +272,16 @@ class AppClass():
             if b[29] == "1": key.append("Start")
             
             if b[28] == "1": key.append("+Left")
-            if b[27] == "1": key.append("+Right")
-            if b[26] == "1": key.append("+Up")
-            if b[25] == "1": key.append("+Down")
+            elif b[27] == "1": key.append("+Right")
+            elif b[26] == "1": key.append("+Up")
+            elif b[25] == "1": key.append("+Down")
 
             if b[8] == "1": key.append("Keyboard")
      
             self.key = key
 
+            self.vjoy.set_axis(pyvjoy.HID_USAGE_X, self.joystickX * 32768 // 128)
+            self.vjoy.set_axis(pyvjoy.HID_USAGE_Y, self.joystickY * 32768 // 128)
             
             for key in winKey:
                 if key in self.key:
@@ -239,13 +293,13 @@ class AppClass():
                         self.vjoy.set_button(winKey[key][1], 0)
 
 
-  
+
 
 winKey = {
-    "oLeft": ("k", 1),
-    "oRight": ("k", 2),
-    "oUp": ("k", 3),
-    "oDown": ("k", 4),
+    "oLeft": ("j", 1),
+    "oRight": ("j", 2),
+    "oUp": ("j", 3),
+    "oDown": ("j", 4),
 
     "R": ("k", 5),
     "L": ("k", 6),
@@ -262,6 +316,18 @@ winKey = {
     "+Up": ("k", 15),
     "+Down": ("k", 16),
 }
+
+
+option = {
+    "port": 8889,
+    "WIN_p1": False,
+    "WIN_p2": False,
+    "bgcolor": False
+}
+
+if os.path.exists("./option.json"):
+    with open("./option.json") as f:
+        option = json.load(f)
 
 App = AppClass()
 STOP = True
