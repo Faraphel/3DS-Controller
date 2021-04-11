@@ -205,31 +205,29 @@ class AppClass():
                 widget_3DS = []
 
                 if self.key:
-                    if "L" in self.key: widget_3DS.append( self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"]) )
-                    if "R" in self.key: widget_3DS.append( self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"]) )
+                    if KEY_L in self.key: widget_3DS.append( self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"]) )
+                    if KEY_R in self.key: widget_3DS.append( self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"]) )
 
-                    if "X" in self.key: widget_3DS.append( self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"]) )
-                    if "Y" in self.key: widget_3DS.append( self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"]) )
-                    if "A" in self.key: widget_3DS.append( self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"]) )
-                    if "B" in self.key: widget_3DS.append( self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"]) )
+                    if KEY_X in self.key: widget_3DS.append( self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"]) )
+                    if KEY_Y in self.key: widget_3DS.append( self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"]) )
+                    if KEY_A in self.key: widget_3DS.append( self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"]) )
+                    if KEY_B in self.key: widget_3DS.append( self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"]) )
 
-                    if "+Left" in self.key: widget_3DS.append( self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"]) )
-                    elif "+Right" in self.key: widget_3DS.append( self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"]) )
-                    elif "+Up" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"]) )
-                    elif "+Down" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"]) )
+                    if KEY_padLeft in self.key: widget_3DS.append( self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"]) )
+                    elif KEY_padRight in self.key: widget_3DS.append( self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"]) )
+                    elif KEY_padUp in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"]) )
+                    elif KEY_padDown in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"]) )
 
-                    elif "Select" in self.key: widget_3DS.append( self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"]) )
-                    elif "Start" in self.key: widget_3DS.append( self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"]) )
+                    elif KEY_Select in self.key: widget_3DS.append( self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"]) )
+                    elif KEY_Start in self.key: widget_3DS.append( self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"]) )
 
-                    if "oLeft" in self.key: ox = 10
-                    elif "oRight" in self.key: ox = -10
+                    ox = round((self.joystickX * 20 / 127) - 10)
+                    oy = round((self.joystickY * 20 / 127) - 10)
 
-                    if "oUp" in self.key: oy = -10
-                    elif "oDown" in self.key: oy = 10
 
                 widget_3DS.append( self.Canvas3DS.create_image(83+ox, 332+oy, image=self.imgtk["joystick"]) )
 
-                if "Tap" in self.key:
+                if KEY_Tap in self.key:
                     DS_X = 142 + (212 / 314) * self.screenX
                     DS_Y = 284 + (161 / 117) * self.screenY
                     widget_3DS.append( self.Canvas3DS.create_rectangle(DS_X-2, DS_Y-2, DS_X+2, DS_Y+2, outline = "red") )
@@ -267,85 +265,87 @@ class AppClass():
 
                 _x = int(b[57:65], base=2)
                 if b[52] == "1":
-                    key.append("oLeft")
+                    key.append(KEY_oLeft)
                     self.joystickX = 32 + (_x) if 32+(_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
                 elif b[51] == "1":
-                    key.append("oRight")
+                    key.append(KEY_oRight)
                     self.joystickX = (_x)-127 if (_x)-127 > 0 else 0
                 else: self.joystickX = 64
 
 
                 _y = int(b[73:81], base=2)
                 if b[50] == "1":
-                    key.append("oUp")
+                    key.append(KEY_oUp)
                     self.joystickY = (_y)-127 if (_y)-127 > 0 else 0
                 elif b[49] == "1":
-                    key.append("oDown")
+                    key.append(KEY_oDown)
                     self.joystickY = 32 + (_y) if 32+(_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
                 else: self.joystickY = 64
 
 
-                if b[44] == "1": key.append("Tap")
+                if b[44] == "1": key.append(KEY_Tap)
 
-                if b[40] == "1": key.append("R")
-                if b[39] == "1": key.append("L")
+                if b[40] == "1": key.append(KEY_R)
+                if b[39] == "1": key.append(KEY_L)
 
-                if b[38] == "1": key.append("X")
-                if b[37] == "1": key.append("Y")
-                if b[32] == "1": key.append("A")
-                if b[31] == "1": key.append("B")
+                if b[38] == "1": key.append(KEY_X)
+                if b[37] == "1": key.append(KEY_Y)
+                if b[32] == "1": key.append(KEY_A)
+                if b[31] == "1": key.append(KEY_B)
 
-                if b[30] == "1": key.append("Select")
-                if b[29] == "1": key.append("Start")
+                if b[30] == "1": key.append(KEY_Select)
+                if b[29] == "1": key.append(KEY_Start)
 
-                if b[28] == "1": key.append("+Left")
-                elif b[27] == "1": key.append("+Right")
-                elif b[26] == "1": key.append("+Up")
-                elif b[25] == "1": key.append("+Down")
+                if b[28] == "1": key.append(KEY_padLeft)
+                elif b[27] == "1": key.append(KEY_padRight)
+                elif b[26] == "1": key.append(KEY_padUp)
+                elif b[25] == "1": key.append(KEY_padDown)
 
-                if b[8] == "1": key.append("Keyboard")
+                #if b[8] == "1": key.append(KEY_Keyboard)
 
                 self.key = key
 
-                self.vjoy.set_axis(pyvjoy.HID_USAGE_X, self.joystickX * 32768 // 128)
-                self.vjoy.set_axis(pyvjoy.HID_USAGE_Y, self.joystickY * 32768 // 128)
-
-                for key in winKey:
+                self.vjoy.data.wAxisX = self.joystickX * 32768 // 128
+                self.vjoy.data.wAxisY = self.joystickY * 32768 // 128
+                _lButton = 0
+                for key in KEYS:
                     if key in self.key:
-                        if winKey[key][0] == "k":
-                            self.vjoy.set_button(winKey[key][1], 1)
+                        if key[0] == "k":
+                            _lButton += key[1]
 
-                    else:
-                        if winKey[key][0] == "k":
-                            self.vjoy.set_button(winKey[key][1], 0)
+                self.vjoy.data.lButtons = _lButton
+                self.vjoy.update()
 
             except Exception as e: print(e)
 
 
+KEY_Tap = "T"
+KEY_Keyboard = "k"
 
+KEY_oLeft = ("j", 2**0)
+KEY_oRight = ("j", 2**1)
+KEY_oUp = ("j", 2**2)
+KEY_oDown = ("j", 2**3)
 
-winKey = {
-    "oLeft": ("j", 1),
-    "oRight": ("j", 2),
-    "oUp": ("j", 3),
-    "oDown": ("j", 4),
+KEY_R = ("k", 2**4)
+KEY_L = ("k", 2**5)
+KEY_A = ("k", 2**6)
+KEY_B = ("k", 2**7)
+KEY_X = ("k", 2**8)
+KEY_Y = ("k", 2**9)
 
-    "R": ("k", 5),
-    "L": ("k", 6),
-    "A": ("k", 7),
-    "B": ("k", 8),
-    "X": ("k", 9),
-    "Y": ("k", 10),
+KEY_Select = ("k", 2**10)
+KEY_Start = ("k", 2**11)
 
-    "Select": ("k", 11),
-    "Start": ("k", 12),
+KEY_padLeft = ("k", 2**12)
+KEY_padRight = ("k", 2**13)
+KEY_padUp = ("k", 2**14)
+KEY_padDown = ("k", 2**15)
 
-    "+Left": ("k", 13),
-    "+Right": ("k", 14),
-    "+Up": ("k", 15),
-    "+Down": ("k", 16),
-}
-
+KEYS = [KEY_oLeft, KEY_oRight, KEY_oUp, KEY_oDown,
+ KEY_R, KEY_L, KEY_A, KEY_B, KEY_X, KEY_Y,
+ KEY_Select, KEY_Start,
+ KEY_padLeft, KEY_padRight, KEY_padUp, KEY_padDown]
 
 option = {
     "port": 8889,
