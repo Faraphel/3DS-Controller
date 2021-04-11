@@ -3,6 +3,7 @@ Un projet dans le but d'utiliser sa 3DS comme une manette.
 
 ## Prérequis
 - Une 3DS possédant un Homebrew
+- Installer vJoy, disponible ici : http://vjoystick.sourceforge.net/site/index.php/download-a-install/download, ainsi que de le configurer avec "Configure vJoy" et définir 16 boutons pour le contrôleur 1
 
 ## Installation
 Pour installer 3DS Controller, télécharger le dossier .zip de l'application disponible dans "releases": https://github.com/Faraphel/3DS-Controller/releases.
