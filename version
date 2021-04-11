@@ -1,4 +1,5 @@
 {
-  "version": "0.3",
-  "changelog": "First version of this file, \nNothing to comment."
+  "version": "0.4",
+  "subversion": "0",
+  "changelog": "Il est à présent possible de vérifier automatiquement s'il existe une mise à jour pour l'application.\nRéduction drastique de l'utilisation du processeur.\nLes erreurs ne cause plus un crash de l'application"
 }

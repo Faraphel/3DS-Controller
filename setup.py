@@ -11,7 +11,7 @@ options = {
             "./3DS/",
             ("./venv/Lib/site-packages/pynput", "./lib/pynput")
         ],
-        "includes": ["tkinter", "pyvjoy", "pynput"],
+        "includes": ["tkinter", "pyvjoy", "pynput", "requests"],
         "packages": [],
         "excludes": []
     }

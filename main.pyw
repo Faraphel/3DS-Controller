@@ -1,23 +1,43 @@
 from tkinter import *
-from tkinter import colorchooser
+from tkinter import colorchooser, messagebox
 import socket
 from threading import Thread
 from PIL import Image, ImageTk, ImageGrab
 import os
 from pynput import mouse
+import requests
 import time
 import pyvjoy
 import json
 
-STOP = False
+VERSION_FILE_URL = "https://raw.githubusercontent.com/Faraphel/3DS-Controller/master/version"
+GITHUB_RELEASE_URL = "https://github.com/Faraphel/3DS-Controller/releases"
+
+def check_update():
+    try:
+        gitversion = requests.get(VERSION_FILE_URL).json()
+        with open("version", "rb") as f:
+            locversion = json.load(f)
+
+        if gitversion["version"] != locversion["version"]:
+            if messagebox.askyesno("Mise à jour disponible !", "Une mise à jour est disponible, souhaitez-vous l'installer ?\n\n"+ \
+                                f"Version : {locversion['version']}.{locversion['subversion']} -> {gitversion['version']}.{gitversion['subversion']}\n"+\
+                                f"Changelog :\n{gitversion['changelog']}"):
+                os.startfile(GITHUB_RELEASE_URL)
+    except Exception as e:
+        print(e)
 
 class AppClass():
     def __init__(self):
         self.root = Tk()
+        self.STOP = False
         self.root.title("3DS Controller - Faraphel")
         self.root.resizable(False, False)
         try: self.root.iconphoto(True, ImageTk.PhotoImage(file="./icon.ico"))
         except: pass
+        self.root.protocol("WM_DELETE_WINDOW", self.quit)
+
+        check_update()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Internet & UDP
         self.mouse = mouse.Controller()
@@ -39,24 +59,26 @@ class AppClass():
             self.imgtk[name] = ImageTk.PhotoImage(self.img[name])
 
         self.Canvas3DS = Canvas(self.root, width=self.img["3DS"].width + 40, height=self.img["3DS"].height + 40, bg=option["bgcolor"] if option["bgcolor"] else 'SystemButtonFace')
-        self.Canvas3DS.grid(row = 1, column = 1, columnspan = 4)
+        self.Canvas3DS.grid(row = 1, column = 1, columnspan = 3)
         
         w, h = self.img["3DS"].width, self.img["3DS"].height
         self.Canvas3DS.create_image(w//2 + 20, h//2 + 20, image=self.imgtk["3DS"])
 
         self.label_coordinate = Label(self.root, text="???")
-        self.label_coordinate.grid(row = 2, column = 1, sticky = "NEWS")
+        self.label_coordinate.grid(row = 2, column = 1, sticky = "NEWS", columnspan=2)
 
         self.button_option = Button(self.root, text = "Paramètre", relief = RIDGE, command = self.option_menu)
         self.button_option.grid(row = 2, column = 3, sticky = "EW")
-
-        self.button_option = Button(self.root, text="Quitter", relief=RIDGE, command=self.root.destroy)
-        self.button_option.grid(row=2, column=4, sticky="EW")
 
 
         self.connect()
         self.root.after(0, self.update_tk)
         self.root.mainloop()
+
+
+    def quit(self):
+        self.STOP = True
+        self.root.destroy()
 
 
     def save_option(self):
@@ -177,120 +199,127 @@ class AppClass():
 
 
     def update_tk(self):
-        while True:
-            ox, oy = 0, 0
-            widget_3DS = []
-            
-            if self.key:
-                if "L" in self.key: widget_3DS.append( self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"]) )
-                if "R" in self.key: widget_3DS.append( self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"]) )
+        while not(self.STOP):
+            try:
+                ox, oy = 0, 0
+                widget_3DS = []
 
-                if "X" in self.key: widget_3DS.append( self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"]) )
-                if "Y" in self.key: widget_3DS.append( self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"]) )
-                if "A" in self.key: widget_3DS.append( self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"]) )
-                if "B" in self.key: widget_3DS.append( self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"]) )
+                if self.key:
+                    if "L" in self.key: widget_3DS.append( self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"]) )
+                    if "R" in self.key: widget_3DS.append( self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"]) )
 
-                if "+Left" in self.key: widget_3DS.append( self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"]) )
-                elif "+Right" in self.key: widget_3DS.append( self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"]) )
-                elif "+Up" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"]) )
-                elif "+Down" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"]) )
+                    if "X" in self.key: widget_3DS.append( self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"]) )
+                    if "Y" in self.key: widget_3DS.append( self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"]) )
+                    if "A" in self.key: widget_3DS.append( self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"]) )
+                    if "B" in self.key: widget_3DS.append( self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"]) )
 
-                elif "Select" in self.key: widget_3DS.append( self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"]) )
-                elif "Start" in self.key: widget_3DS.append( self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"]) )
+                    if "+Left" in self.key: widget_3DS.append( self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"]) )
+                    elif "+Right" in self.key: widget_3DS.append( self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"]) )
+                    elif "+Up" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"]) )
+                    elif "+Down" in self.key: widget_3DS.append( self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"]) )
 
-                if "oLeft" in self.key: ox = 10
-                elif "oRight" in self.key: ox = -10
+                    elif "Select" in self.key: widget_3DS.append( self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"]) )
+                    elif "Start" in self.key: widget_3DS.append( self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"]) )
 
-                if "oUp" in self.key: oy = -10
-                elif "oDown" in self.key: oy = 10
+                    if "oLeft" in self.key: ox = 10
+                    elif "oRight" in self.key: ox = -10
 
-            widget_3DS.append( self.Canvas3DS.create_image(83+ox, 332+oy, image=self.imgtk["joystick"]) )
+                    if "oUp" in self.key: oy = -10
+                    elif "oDown" in self.key: oy = 10
 
-            if "Tap" in self.key:
-                DS_X = 142 + (212 / 314) * self.screenX
-                DS_Y = 284 + (161 / 117) * self.screenY
-                widget_3DS.append( self.Canvas3DS.create_rectangle(DS_X-2, DS_Y-2, DS_X+2, DS_Y+2, outline = "red") )
-                self.label_coordinate.config(text = f"x={self.screenX}, y={self.screenY}")
+                widget_3DS.append( self.Canvas3DS.create_image(83+ox, 332+oy, image=self.imgtk["joystick"]) )
 
-                WIN_X = self.WIN_p1[0] + ((self.WIN_p2[0]-self.WIN_p1[0]) / 314) * self.screenX
-                WIN_Y = self.WIN_p1[1] + ((self.WIN_p2[1]-self.WIN_p1[1]) / 117) * self.screenY
-                self.mouse.position = (WIN_X, WIN_Y)
-                self.mouse.press(mouse.Button.left)
-                self.mousePressed = True
+                if "Tap" in self.key:
+                    DS_X = 142 + (212 / 314) * self.screenX
+                    DS_Y = 284 + (161 / 117) * self.screenY
+                    widget_3DS.append( self.Canvas3DS.create_rectangle(DS_X-2, DS_Y-2, DS_X+2, DS_Y+2, outline = "red") )
+                    self.label_coordinate.config(text = f"x={self.screenX}, y={self.screenY}")
 
-            elif self.mousePressed: 
-                self.mouse.release(mouse.Button.left)
-                self.mousePressed = False
+                    WIN_X = self.WIN_p1[0] + ((self.WIN_p2[0]-self.WIN_p1[0]) / 314) * self.screenX
+                    WIN_Y = self.WIN_p1[1] + ((self.WIN_p2[1]-self.WIN_p1[1]) / 117) * self.screenY
+                    self.mouse.position = (WIN_X, WIN_Y)
+                    self.mouse.press(mouse.Button.left)
+                    self.mousePressed = True
 
-            for widget in self.widget_3DS: self.Canvas3DS.delete(widget)
-            self.widget_3DS = widget_3DS
+                elif self.mousePressed:
+                    self.mouse.release(mouse.Button.left)
+                    self.mousePressed = False
 
-            self.Canvas3DS.update()
+                for widget in self.widget_3DS: self.Canvas3DS.delete(widget)
+                self.widget_3DS = widget_3DS
+
+                self.Canvas3DS.update()
+                time.sleep(0.05)
+
+            except Exception as e: print(e)
 
 
     def recv(self):
-        while not(STOP):
-            data, addr = self.socket.recvfrom(512)
-            b = bin(int(data.hex(), base=16))[2:]
+        while not(self.STOP):
+            try:
+                data, addr = self.socket.recvfrom(512)
+                b = bin(int(data.hex(), base=16))[2:]
 
-            self.screenX = int(b[104] + b[89:97], base=2)
-            self.screenY = int(b[105:112], base=2)
+                self.screenX = int(b[104] + b[89:97], base=2)
+                self.screenY = int(b[105:112], base=2)
 
-            key = []
+                key = []
 
-            _x = int(b[57:65], base=2)
-            if b[52] == "1":
-                key.append("oLeft")
-                self.joystickX = 32 + (_x) if 32+(_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
-            elif b[51] == "1":
-                key.append("oRight")
-                self.joystickX = (_x)-127 if (_x)-127 > 0 else 0
-            else: self.joystickX = 64
+                _x = int(b[57:65], base=2)
+                if b[52] == "1":
+                    key.append("oLeft")
+                    self.joystickX = 32 + (_x) if 32+(_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                elif b[51] == "1":
+                    key.append("oRight")
+                    self.joystickX = (_x)-127 if (_x)-127 > 0 else 0
+                else: self.joystickX = 64
 
 
-            _y = int(b[73:81], base=2)
-            if b[50] == "1":
-                key.append("oUp")
-                self.joystickY = (_y)-127 if (_y)-127 > 0 else 0
-            elif b[49] == "1":
-                key.append("oDown")
-                self.joystickY = 32 + (_y) if 32+(_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
-            else: self.joystickY = 64
+                _y = int(b[73:81], base=2)
+                if b[50] == "1":
+                    key.append("oUp")
+                    self.joystickY = (_y)-127 if (_y)-127 > 0 else 0
+                elif b[49] == "1":
+                    key.append("oDown")
+                    self.joystickY = 32 + (_y) if 32+(_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                else: self.joystickY = 64
 
-            
-            if b[44] == "1": key.append("Tap")
-            
-            if b[40] == "1": key.append("R")
-            if b[39] == "1": key.append("L")
 
-            if b[38] == "1": key.append("X")
-            if b[37] == "1": key.append("Y")
-            if b[32] == "1": key.append("A")
-            if b[31] == "1": key.append("B")
-            
-            if b[30] == "1": key.append("Select")
-            if b[29] == "1": key.append("Start")
-            
-            if b[28] == "1": key.append("+Left")
-            elif b[27] == "1": key.append("+Right")
-            elif b[26] == "1": key.append("+Up")
-            elif b[25] == "1": key.append("+Down")
+                if b[44] == "1": key.append("Tap")
 
-            if b[8] == "1": key.append("Keyboard")
-     
-            self.key = key
+                if b[40] == "1": key.append("R")
+                if b[39] == "1": key.append("L")
 
-            self.vjoy.set_axis(pyvjoy.HID_USAGE_X, self.joystickX * 32768 // 128)
-            self.vjoy.set_axis(pyvjoy.HID_USAGE_Y, self.joystickY * 32768 // 128)
-            
-            for key in winKey:
-                if key in self.key:
-                    if winKey[key][0] == "k":
-                        self.vjoy.set_button(winKey[key][1], 1)
+                if b[38] == "1": key.append("X")
+                if b[37] == "1": key.append("Y")
+                if b[32] == "1": key.append("A")
+                if b[31] == "1": key.append("B")
 
-                else:
-                    if winKey[key][0] == "k":
-                        self.vjoy.set_button(winKey[key][1], 0)
+                if b[30] == "1": key.append("Select")
+                if b[29] == "1": key.append("Start")
+
+                if b[28] == "1": key.append("+Left")
+                elif b[27] == "1": key.append("+Right")
+                elif b[26] == "1": key.append("+Up")
+                elif b[25] == "1": key.append("+Down")
+
+                if b[8] == "1": key.append("Keyboard")
+
+                self.key = key
+
+                self.vjoy.set_axis(pyvjoy.HID_USAGE_X, self.joystickX * 32768 // 128)
+                self.vjoy.set_axis(pyvjoy.HID_USAGE_Y, self.joystickY * 32768 // 128)
+
+                for key in winKey:
+                    if key in self.key:
+                        if winKey[key][0] == "k":
+                            self.vjoy.set_button(winKey[key][1], 1)
+
+                    else:
+                        if winKey[key][0] == "k":
+                            self.vjoy.set_button(winKey[key][1], 0)
+
+            except Exception as e: print(e)
 
 
 
@@ -330,4 +359,3 @@ if os.path.exists("./option.json"):
         option = json.load(f)
 
 App = AppClass()
-STOP = True
