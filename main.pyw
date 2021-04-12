@@ -50,6 +50,7 @@ class AppClass():
         self.WIN_p2 = option["WIN_p2"] if option["WIN_p2"] else (self.root.winfo_screenwidth(), self.root.winfo_screenheight())
         self.img, self.imgtk = {}, {}
 
+
         for name in os.listdir("./assets/"):
             name = os.path.splitext(name)[0]
             self.img[name] = Image.open(f"./assets/{name}.png")
@@ -208,6 +209,7 @@ class AppClass():
         option_bgcolor = Button(option_visual, text="Couleur d'arrière plan", relief=RIDGE, command=select_bgcolor)
         option_bgcolor.grid(row=1, column=1)
 
+
     def update_tk(self):
         while not(self.STOP):
             try:
@@ -258,19 +260,17 @@ class AppClass():
                 _lButton = 0
 
                 _x = int(b[57:65], base=2)
-                if b[52] == "1": self.joystickX = 32+(_x) if 32+(_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                if b[52] == "1": self.joystickX = (_x) if (_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
                 elif b[51] == "1": self.joystickX = (_x)-127 if (_x)-127 > 0 else 0
                 else: self.joystickX = 64
 
-
                 _y = int(b[73:81], base=2)
                 if b[50] == "1": self.joystickY = (_y)-127 if (_y)-127 > 0 else 0
-                elif b[49] == "1": self.joystickY = 32+(_y) if 32+(_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                elif b[49] == "1": self.joystickY = (_y) if (_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
                 else: self.joystickY = 64
 
 
-                if b[44] == "1": self.Tap = True
-                else: self.Tap = False
+                self.Tap = True if b[44] == "1" else False
 
                 if b[40] == "1": _lButton += KEY_R
                 if b[39] == "1": _lButton += KEY_L
