@@ -47,7 +47,7 @@ class AppClass():
         self.Tap, self.mousePressed = False, False
         self.joystickX, self.joystickY = 0, 0
         self.WIN_p1 = option["WIN_p1"] if option["WIN_p1"] else (0, 0)
-        self.WIN_p2 = option["WIN_p2"] if option["WIN_p2"] else self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        self.WIN_p2 = option["WIN_p2"] if option["WIN_p2"] else (self.root.winfo_screenwidth(), self.root.winfo_screenheight())
         self.img, self.imgtk = {}, {}
 
         for name in os.listdir("./assets/"):
