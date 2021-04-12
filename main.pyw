@@ -9,13 +9,12 @@ import requests
 import time
 import pyvjoy
 import json
+import zipfile
 
 VERSION_FILE_URL = "https://raw.githubusercontent.com/Faraphel/3DS-Controller/master/version"
-GITHUB_RELEASE_URL = "https://github.com/Faraphel/3DS-Controller/releases"
-
 def check_update():
     try:
-        gitversion = requests.get(VERSION_FILE_URL).json()
+        gitversion = requests.get(VERSION_FILE_URL, allow_redirects=True).json()
         with open("version", "rb") as f:
             locversion = json.load(f)
 
@@ -23,9 +22,25 @@ def check_update():
             if messagebox.askyesno("Mise à jour disponible !", "Une mise à jour est disponible, souhaitez-vous l'installer ?\n\n"+ \
                                 f"Version : {locversion['version']}.{locversion['subversion']} -> {gitversion['version']}.{gitversion['subversion']}\n"+\
                                 f"Changelog :\n{gitversion['changelog']}"):
-                os.startfile(GITHUB_RELEASE_URL)
+
+                if not(os.path.exists("./Updater/Updater.exe")):
+                    dl = requests.get(gitversion["updater_bin"], allow_redirects=True)
+                    with open("./download.zip", "wb") as file:
+                        print(f"Téléchargement de Updater en cours...")
+                        file.write(dl.content)
+                        print("fin du téléchargement, début de l'extraction...")
+
+                    with zipfile.ZipFile("./download.zip") as file:
+                        file.extractall("./Updater/")
+                        print("fin de l'extraction")
+
+                    os.remove("./download.zip")
+                    print("lancement de l'application...")
+                    os.startfile("./Updater/Updater.exe")
+
     except Exception as e:
         print(e)
+
 
 class AppClass():
     def __init__(self):
