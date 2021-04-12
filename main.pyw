@@ -227,7 +227,6 @@ class AppClass():
                 oy = round((self.joystickY * 20 / 127) - 10)
 
                 widget_3DS.append( self.Canvas3DS.create_image(83+ox, 332+oy, image=self.imgtk["joystick"]) )
-                lf.Canvas3D
                 if KEY_Tap in self.key:
                     DS_X = 142 + (212 / 314) * self.screenX
                     DS_Y = 284 + (161 / 117) * self.screenY
@@ -250,7 +249,9 @@ class AppClass():
                 self.Canvas3DS.update()
                 time.sleep(0.05)
 
-            except Exception as e: print(e)
+            except Exception as e:
+                print("function update_tk:")
+                print(e)
 
 
     def recv(self):
@@ -303,7 +304,9 @@ class AppClass():
                 self.vjoy.data.lButtons = _lButton
                 self.vjoy.update()
 
-            except Exception as e: print(e)
+            except Exception as e:
+                print("function recv:")
+                print(e)
 
 
 KEY_Tap = "T"
