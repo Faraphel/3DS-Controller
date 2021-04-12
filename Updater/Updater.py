@@ -26,7 +26,7 @@ try:
 
     os.remove("./download.zip")
     print("lancement de l'application...")
-    os.startfile("../Controller 3DS.exe")
+    os.startfile(os.path.realpath("../Controller 3DS.exe"))
 
 except Exception as e:
     print(f"Impossible d'effectuer la mise à jour :\n\n{str(e)}")

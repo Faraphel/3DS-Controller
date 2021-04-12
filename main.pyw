@@ -36,7 +36,7 @@ def check_update():
 
                     os.remove("./download.zip")
                     print("lancement de l'application...")
-                    os.startfile("./Updater/Updater.exe")
+                    os.startfile(os.path.realpath("./Updater/Updater.exe"))
                     sys.exit()
 
     except Exception as e:
