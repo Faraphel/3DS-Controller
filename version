@@ -1,5 +1,5 @@
 {
   "version": "0.4",
-  "subversion": "0",
-  "changelog": "Il est à présent possible de vérifier automatiquement s'il existe une mise à jour pour l'application.\nRéduction drastique de l'utilisation du processeur.\nLes erreurs ne cause plus un crash de l'application"
+  "subversion": "1",
+  "changelog": "L'affichage des joysticks est à présent analogique.\nOptimisation du code pour la gestion des touches."
 }
