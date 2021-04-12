@@ -21,12 +21,12 @@ try:
         print("fin du téléchargement, début de l'extraction...")
 
     with zipfile.ZipFile("./download.zip") as file:
-        file.extractall("../")
+        file.extractall("./")
         print("fin de l'extraction")
 
     os.remove("./download.zip")
     print("lancement de l'application...")
-    os.startfile(os.path.realpath("../Controller 3DS.exe"))
+    os.startfile(os.path.realpath("./Controller 3DS.exe"))
 
 except Exception as e:
     print(f"Impossible d'effectuer la mise à jour :\n\n{str(e)}")
