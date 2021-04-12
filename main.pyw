@@ -43,17 +43,13 @@ class AppClass():
         self.mouse = mouse.Controller()
 
         self.port = option["port"]
-        self.key = []
         self.widget_3DS = []
-        self.mousePressed = False
+        self.Tap, self.mousePressed = False, False
         self.joystickX, self.joystickY = 0, 0
-        if option["WIN_p1"]: self.WIN_p1 = option["WIN_p1"]
-        else: self.WIN_p1 = (0, 0)
-        if option["WIN_p2"]: self.WIN_p2 = option["WIN_p2"]
-        else: self.WIN_p2 = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        self.WIN_p1 = option["WIN_p1"] if option["WIN_p1"] else (0, 0)
+        self.WIN_p2 = option["WIN_p2"] if option["WIN_p2"] else self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        self.img, self.imgtk = {}, {}
 
-        self.img = {}
-        self.imgtk = {}
         for name in os.listdir("./assets/"):
             name = os.path.splitext(name)[0]
             self.img[name] = Image.open(f"./assets/{name}.png")
@@ -61,9 +57,7 @@ class AppClass():
 
         self.Canvas3DS = Canvas(self.root, width=self.img["3DS"].width + 40, height=self.img["3DS"].height + 40, bg=option["bgcolor"] if option["bgcolor"] else 'SystemButtonFace')
         self.Canvas3DS.grid(row = 1, column = 1, columnspan = 3)
-        
-        w, h = self.img["3DS"].width, self.img["3DS"].height
-        self.Canvas3DS.create_image(w//2 + 20, h//2 + 20, image=self.imgtk["3DS"])
+        self.Canvas3DS.create_image(self.img["3DS"].width//2 + 20, self.img["3DS"].height//2 + 20, image=self.imgtk["3DS"])
 
         self.label_coordinate = Label(self.root, text="???")
         self.label_coordinate.grid(row = 2, column = 1, sticky = "NEWS", columnspan=2)
@@ -72,7 +66,14 @@ class AppClass():
         self.button_option.grid(row = 2, column = 3, sticky = "EW")
 
 
-        self.connect()
+
+        self.socket.bind(("", self.port))
+        self.vjoy = pyvjoy.VJoyDevice(1)
+
+        self.recvThread = Thread(target=self.recv)
+        self.recvThread.setDaemon(True)
+        self.recvThread.start()
+
         self.root.after(0, self.update_tk)
         self.root.mainloop()
 
@@ -182,22 +183,11 @@ class AppClass():
                 option["bgcolor"] = option_bgcolor[-1]
                 self.save_option()
 
-
         option_visual = LabelFrame(self.optionTL, text="Visuel")
         option_visual.grid(row=3, column=1, sticky="NEWS")
 
         option_bgcolor = Button(option_visual, text="Couleur d'arrière plan", relief=RIDGE, command=select_bgcolor)
         option_bgcolor.grid(row=1, column=1)
-
-
-    def connect(self):
-        self.socket.bind(("", self.port))
-        self.vjoy = pyvjoy.VJoyDevice(1)
-    
-        self.recvThread = Thread(target=self.recv)
-        self.recvThread.setDaemon(True)
-        self.recvThread.start()
-
 
     def update_tk(self):
         while not(self.STOP):
@@ -228,7 +218,7 @@ class AppClass():
 
                 widget_3DS.append( self.Canvas3DS.create_image(83+ox, 332+oy, image=self.imgtk["joystick"]) )
 
-                if KEY_Tap in self.key:
+                if self.Tap:
                     DS_X = 142 + (212 / 314) * self.screenX
                     DS_Y = 284 + (161 / 117) * self.screenY
                     widget_3DS.append( self.Canvas3DS.create_rectangle(DS_X-2, DS_Y-2, DS_X+2, DS_Y+2, outline = "red") )
@@ -263,22 +253,22 @@ class AppClass():
                 self.screenX = int(b[104] + b[89:97], base=2)
                 self.screenY = int(b[105:112], base=2)
 
-                key = []
                 _lButton = 0
 
                 _x = int(b[57:65], base=2)
-                if b[52] == "1": self.joystickX = 32 + (_x) if 32+(_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                if b[52] == "1": self.joystickX = 32+(_x) if 32+(_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
                 elif b[51] == "1": self.joystickX = (_x)-127 if (_x)-127 > 0 else 0
                 else: self.joystickX = 64
 
 
                 _y = int(b[73:81], base=2)
                 if b[50] == "1": self.joystickY = (_y)-127 if (_y)-127 > 0 else 0
-                elif b[49] == "1": self.joystickY = 32 + (_y) if 32+(_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                elif b[49] == "1": self.joystickY = 32+(_y) if 32+(_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
                 else: self.joystickY = 64
 
 
-                if b[44] == "1": key.append(KEY_Tap)
+                if b[44] == "1": self.Tap = True
+                else: self.Tap = False
 
                 if b[40] == "1": _lButton += KEY_R
                 if b[39] == "1": _lButton += KEY_L
@@ -298,10 +288,8 @@ class AppClass():
 
                 #if b[8] == "1": key.append(KEY_Keyboard)
 
-                self.key = key
-
-                self.vjoy.data.wAxisX = self.joystickX * 32768 // 128
-                self.vjoy.data.wAxisY = self.joystickY * 32768 // 128
+                self.vjoy.data.wAxisX = self.joystickX * 256 # 32768 // 128
+                self.vjoy.data.wAxisY = self.joystickY * 256 # 32768 // 128
                 self.vjoy.data.lButtons = _lButton
                 self.vjoy.update()
 
@@ -334,6 +322,8 @@ option = {
     "WIN_p2": False,
     "bgcolor": False
 }
+
+#TODO: au lieu de créer / supprimer les images de la 3DS, les déplacées
 
 if os.path.exists("./option.json"):
     with open("./option.json") as f:
