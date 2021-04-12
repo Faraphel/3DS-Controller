@@ -43,7 +43,7 @@ class AppClass():
         self.mouse = mouse.Controller()
 
         self.port = option["port"]
-        self.widget_3DS = []
+        self.widget_3DS = {}
         self.Tap, self.mousePressed = False, False
         self.joystickX, self.joystickY = 0, 0
         self.WIN_p1 = option["WIN_p1"] if option["WIN_p1"] else (0, 0)
@@ -58,6 +58,25 @@ class AppClass():
         self.Canvas3DS = Canvas(self.root, width=self.img["3DS"].width + 40, height=self.img["3DS"].height + 40, bg=option["bgcolor"] if option["bgcolor"] else 'SystemButtonFace')
         self.Canvas3DS.grid(row = 1, column = 1, columnspan = 3)
         self.Canvas3DS.create_image(self.img["3DS"].width//2 + 20, self.img["3DS"].height//2 + 20, image=self.imgtk["3DS"])
+
+        self.widget_3DS[iKEY_L] = self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"])
+        self.widget_3DS[iKEY_R] = self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"])
+
+        self.widget_3DS[iKEY_X] = self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"])
+        self.widget_3DS[iKEY_Y] = self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"])
+        self.widget_3DS[iKEY_A] = self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"])
+        self.widget_3DS[iKEY_B] = self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"])
+
+        self.widget_3DS[iKEY_padLeft] = self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"])
+        self.widget_3DS[iKEY_padRight] = self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"])
+        self.widget_3DS[iKEY_padUp] = self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"])
+        self.widget_3DS[iKEY_padDown] = self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"])
+
+        self.widget_3DS[iKEY_Select] = self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"])
+        self.widget_3DS[iKEY_Start] = self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"])
+
+        self.widget_3DS[iKEY_Joystick] = self.Canvas3DS.create_image(83, 332, image=self.imgtk["joystick"])
+        self.widget_3DS[iKEY_Tap] = self.Canvas3DS.create_rectangle(-2, -2, 2, 2, outline="red")
 
         self.label_coordinate = Label(self.root, text="???")
         self.label_coordinate.grid(row = 2, column = 1, sticky = "NEWS", columnspan=2)
@@ -192,51 +211,33 @@ class AppClass():
     def update_tk(self):
         while not(self.STOP):
             try:
-                ox, oy = 0, 0
-                widget_3DS = []
-
                 _lButtons = self.vjoy.data.lButtons
-                if _lButtons:
-                    if _lButtons >> iKEY_L & 1: widget_3DS.append( self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"]) )
-                    if _lButtons >> iKEY_R & 1: widget_3DS.append( self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"]) )
 
-                    if _lButtons >> iKEY_X & 1: widget_3DS.append( self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"]) )
-                    if _lButtons >> iKEY_Y & 1: widget_3DS.append( self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"]) )
-                    if _lButtons >> iKEY_A & 1: widget_3DS.append( self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"]) )
-                    if _lButtons >> iKEY_B & 1: widget_3DS.append( self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"]) )
+                for i in range(12):
+                    self.Canvas3DS.itemconfigure(self.widget_3DS[i], state="normal" if _lButtons >> i & 1 else "hidden")
 
-                    if _lButtons >> iKEY_padLeft & 1: widget_3DS.append( self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"]) )
-                    elif _lButtons >> iKEY_padRight & 1: widget_3DS.append( self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"]) )
-                    elif _lButtons >> iKEY_padUp & 1: widget_3DS.append( self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"]) )
-                    elif _lButtons >> iKEY_padDown & 1: widget_3DS.append( self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"]) )
-
-                    elif _lButtons >> iKEY_Select & 1: widget_3DS.append( self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"]) )
-                    elif _lButtons >> iKEY_Start & 1: widget_3DS.append( self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"]) )
-
-                ox = round((self.joystickX * 20 / 127) - 10)
-                oy = round((self.joystickY * 20 / 127) - 10)
-
-                widget_3DS.append( self.Canvas3DS.create_image(83+ox, 332+oy, image=self.imgtk["joystick"]) )
+                ox = round((self.joystickX * 20 / 127) + 48)
+                oy = round((self.joystickY * 20 / 127) + 297)
+                self.Canvas3DS.moveto(self.widget_3DS[iKEY_Joystick], ox, oy)
 
                 if self.Tap:
-                    DS_X = 142 + (212 / 314) * self.screenX
-                    DS_Y = 284 + (161 / 117) * self.screenY
-                    widget_3DS.append( self.Canvas3DS.create_rectangle(DS_X-2, DS_Y-2, DS_X+2, DS_Y+2, outline = "red") )
-                    self.label_coordinate.config(text = f"x={self.screenX}, y={self.screenY}")
-
                     WIN_X = self.WIN_p1[0] + ((self.WIN_p2[0]-self.WIN_p1[0]) / 314) * self.screenX
                     WIN_Y = self.WIN_p1[1] + ((self.WIN_p2[1]-self.WIN_p1[1]) / 117) * self.screenY
                     self.mouse.position = (WIN_X, WIN_Y)
-                    self.mouse.press(mouse.Button.left)
+                    if not(self.mousePressed): self.mouse.press(mouse.Button.left)
+
+                    DS_X = 142 + (212 / 314) * self.screenX
+                    DS_Y = 284 + (161 / 117) * self.screenY
+                    self.Canvas3DS.moveto(self.widget_3DS[iKEY_Tap], DS_X, DS_Y)
+                    self.label_coordinate.config(text = f"x={self.screenX}, y={self.screenY}")
+
                     self.mousePressed = True
+
 
                 elif self.mousePressed:
                     self.mouse.release(mouse.Button.left)
                     self.mouse.position = (0, 0)
                     self.mousePressed = False
-
-                for widget in self.widget_3DS: self.Canvas3DS.delete(widget)
-                self.widget_3DS = widget_3DS
 
                 self.Canvas3DS.update()
                 time.sleep(0.05)
@@ -316,6 +317,9 @@ KEY_padLeft, iKEY_padLeft = 2**8, 8
 KEY_padRight, iKEY_padRight = 2**9, 9
 KEY_padUp, iKEY_padUp = 2**10, 10
 KEY_padDown, iKEY_padDown = 2**11, 11
+
+iKEY_Joystick = 12
+iKEY_Tap = 13
 
 option = {
     "port": 8889,
