@@ -45,7 +45,7 @@ class AppClass():
         self.port = option["port"]
         self.widget_3DS = {}
         self.Tap, self.mousePressed = False, False
-        self.joystickX, self.joystickY = 0, 0
+        self.joystickX, self.joystickY = 64, 64
         self.WIN_p1 = option["WIN_p1"] if option["WIN_p1"] else (0, 0)
         self.WIN_p2 = option["WIN_p2"] if option["WIN_p2"] else (self.root.winfo_screenwidth(), self.root.winfo_screenheight())
         self.img, self.imgtk = {}, {}
@@ -75,7 +75,7 @@ class AppClass():
         self.widget_3DS[iKEY_Select] = self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"])
         self.widget_3DS[iKEY_Start] = self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"])
 
-        self.widget_3DS[iKEY_Joystick] = self.Canvas3DS.create_image(83, 332, image=self.imgtk["joystick"])
+        self.widget_3DS[iKEY_Joystick] = self.Canvas3DS.create_image(0, 0, image=self.imgtk["joystick"])
         self.widget_3DS[iKEY_Tap] = self.Canvas3DS.create_rectangle(-2, -2, 2, 2, outline="red")
 
         self.label_coordinate = Label(self.root, text="???")
@@ -327,8 +327,6 @@ option = {
     "WIN_p2": False,
     "bgcolor": False
 }
-
-#TODO: au lieu de créer / supprimer les images de la 3DS, les déplacées
 
 if os.path.exists("./option.json"):
     with open("./option.json") as f:
