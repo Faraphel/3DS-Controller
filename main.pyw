@@ -232,6 +232,7 @@ class AppClass():
 
                 elif self.mousePressed:
                     self.mouse.release(mouse.Button.left)
+                    self.mouse.position = (0, 0)
                     self.mousePressed = False
 
                 for widget in self.widget_3DS: self.Canvas3DS.delete(widget)
