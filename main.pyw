@@ -3,7 +3,7 @@ from tkinter import colorchooser, messagebox
 import socket
 from threading import Thread
 from PIL import Image, ImageTk, ImageGrab
-import os
+import os, sys
 from pynput import mouse
 import requests
 import time
@@ -37,6 +37,7 @@ def check_update():
                     os.remove("./download.zip")
                     print("lancement de l'application...")
                     os.startfile("./Updater/Updater.exe")
+                    sys.exit()
 
     except Exception as e:
         print(e)
