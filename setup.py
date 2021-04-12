@@ -6,6 +6,9 @@ options = {
         "include_files":[
             "./assets/",
             "./icon.ico",
+            "./LICENSE",
+            "./README.md",
+            "./version",
             sys.exec_prefix + "\\DLLs\\tcl86t.dll",
             sys.exec_prefix + "\\DLLs\\tk86t.dll",
             "./3DS/",
@@ -27,7 +30,7 @@ setup(
     author_email='rc60650@hotmail.com',
     description='Utiliser votre 3DS comme une manette.',
     executables = [Executable("./main.pyw",
-                              icon = "icon.ico",
+                              icon = "./icon.ico",
                               base = "win32gui",
                               target_name = "Controller 3DS.exe",
                               shortcut_name = "3DS Controller",
