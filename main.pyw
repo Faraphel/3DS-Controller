@@ -216,7 +216,7 @@ class AppClass():
                     if _lButtons >> iKEY_B & 1: widget_3DS.append( self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"]) )
 
                     if _lButtons >> iKEY_padLeft & 1: widget_3DS.append( self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"]) )
-                    elif _lButtons >> iKEY_padRight & 1: widget_3DS.append( self.create_image(65, 415, image=self.imgtk["hl"]) )
+                    elif _lButtons >> iKEY_padRight & 1: widget_3DS.append( self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"]) )
                     elif _lButtons >> iKEY_padUp & 1: widget_3DS.append( self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"]) )
                     elif _lButtons >> iKEY_padDown & 1: widget_3DS.append( self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"]) )
 
