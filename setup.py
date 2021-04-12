@@ -22,7 +22,7 @@ options = {
 
 setup(
     options=options,
-    name='MC-Log-Viewer',
+    name='3DS-Controller',
     version='0.3',
     url='https://github.com/Faraphel/3DS-Controller',
     license='GPL-3.0',
