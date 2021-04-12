@@ -1,7 +1,7 @@
 {
   "version": "0.5",
   "subversion": "0",
-  "changelog": "L'affichage des joysticks est à présent analogique.\nOptimisation du code pour la gestion des touches.\nOptimisation du code pour l'affichage des touches.",
+  "changelog": "L'affichage des joysticks est à présent analogique.\nOptimisation du code pour la gestion des touches.\nOptimisation du code pour l'affichage des touches.\nLes mises à jours s'installent toute seules.",
   "download_bin": "https://github.com/Faraphel/3DS-Controller/releases/download/0.5/3DS.Controller.v0.5.amd64-3.8.zip",
   "updater_bin": "https://github.com/Faraphel/3DS-Controller/raw/master/Updater/Updater%200.1.zip"
 }
