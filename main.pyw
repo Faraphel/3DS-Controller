@@ -57,14 +57,17 @@ class AppClass():
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Internet & UDP
         self.mouse = mouse.Controller()
+        self.connected_3DS = []
+        self.Canvas3DS = {}
 
         self.port = option["port"]
         self.widget_3DS = {}
         self.Tap, self.mousePressed = False, False
-        self.joystickX, self.joystickY = 64, 64
+        self.joystickX, self.joystickY = {}, {}
         self.WIN_p1 = option["WIN_p1"] if option["WIN_p1"] else (0, 0)
         self.WIN_p2 = option["WIN_p2"] if option["WIN_p2"] else (self.root.winfo_screenwidth(), self.root.winfo_screenheight())
         self.img, self.imgtk = {}, {}
+        self.vjoy = {}
 
 
         for name in os.listdir("./assets/"):
@@ -72,39 +75,19 @@ class AppClass():
             self.img[name] = Image.open(f"./assets/{name}.png")
             self.imgtk[name] = ImageTk.PhotoImage(self.img[name])
 
-        self.Canvas3DS = Canvas(self.root, width=self.img["3DS"].width + 40, height=self.img["3DS"].height + 40, bg=option["bgcolor"] if option["bgcolor"] else 'SystemButtonFace')
-        self.Canvas3DS.grid(row = 1, column = 1, columnspan = 3)
-        self.Canvas3DS.create_image(self.img["3DS"].width//2 + 20, self.img["3DS"].height//2 + 20, image=self.imgtk["3DS"])
 
-        self.widget_3DS[iKEY_L] = self.Canvas3DS.create_image(50, 254, image=self.imgtk["L"])
-        self.widget_3DS[iKEY_R] = self.Canvas3DS.create_image(449, 254, image=self.imgtk["R"])
-
-        self.widget_3DS[iKEY_X] = self.Canvas3DS.create_image(416, 312, image=self.imgtk["X"])
-        self.widget_3DS[iKEY_Y] = self.Canvas3DS.create_image(391, 338, image=self.imgtk["Y"])
-        self.widget_3DS[iKEY_A] = self.Canvas3DS.create_image(442, 338, image=self.imgtk["A"])
-        self.widget_3DS[iKEY_B] = self.Canvas3DS.create_image(415, 364, image=self.imgtk["B"])
-
-        self.widget_3DS[iKEY_padLeft] = self.Canvas3DS.create_image(98, 415, image=self.imgtk["hl"])
-        self.widget_3DS[iKEY_padRight] = self.Canvas3DS.create_image(65, 415, image=self.imgtk["hl"])
-        self.widget_3DS[iKEY_padUp] = self.Canvas3DS.create_image(81, 398, image=self.imgtk["vl"])
-        self.widget_3DS[iKEY_padDown] = self.Canvas3DS.create_image(81, 432, image=self.imgtk["vl"])
-
-        self.widget_3DS[iKEY_Select] = self.Canvas3DS.create_image(178, 466, image=self.imgtk["SELECT"])
-        self.widget_3DS[iKEY_Start] = self.Canvas3DS.create_image(319, 466, image=self.imgtk["START"])
-
-        self.widget_3DS[iKEY_Joystick] = self.Canvas3DS.create_image(0, 0, image=self.imgtk["joystick"])
-        self.widget_3DS[iKEY_Tap] = self.Canvas3DS.create_rectangle(-2, -2, 2, 2, outline="red")
 
         self.label_coordinate = Label(self.root, text="???")
         self.label_coordinate.grid(row = 2, column = 1, sticky = "NEWS", columnspan=2)
 
-        self.button_option = Button(self.root, text = "Paramètre", relief = RIDGE, command = self.option_menu)
+        self.button_option = Button(self.root, text = "Paramètres...", relief = RIDGE, command = self.option_menu)
         self.button_option.grid(row = 2, column = 3, sticky = "EW")
 
-
+        self.frame_Canvas_3DS = Frame(self.root)
+        self.frame_Canvas_3DS.grid(row=1, column=1, columnspan=3)
+        #self.init_3DS(ID=0)
 
         self.socket.bind(("", self.port))
-        self.vjoy = pyvjoy.VJoyDevice(1)
 
         self.recvThread = Thread(target=self.recv)
         self.recvThread.setDaemon(True)
@@ -112,6 +95,41 @@ class AppClass():
 
         self.root.after(0, self.update_tk)
         self.root.mainloop()
+
+
+    def init_3DS(self, addr, ID=None):
+        if ID == None: ID = len(self.connected_3DS)
+        addr = addr[0]
+
+        self.Canvas3DS[addr] = Canvas(self.frame_Canvas_3DS, width=self.img["3DS"].width + 40, height=self.img["3DS"].height + 40,
+                                bg=option["bgcolor"] if option["bgcolor"] else 'SystemButtonFace')
+        self.Canvas3DS[addr].grid(row = 1, column = ID)
+        self.Canvas3DS[addr].create_image(self.img["3DS"].width // 2 + 20, self.img["3DS"].height // 2 + 20,
+                                    image=self.imgtk["3DS"])
+
+        self.widget_3DS[addr] = {}
+        self.widget_3DS[addr][iKEY_L] = self.Canvas3DS[addr].create_image(50, 254, image=self.imgtk["L"])
+        self.widget_3DS[addr][iKEY_R] = self.Canvas3DS[addr].create_image(449, 254, image=self.imgtk["R"])
+
+        self.widget_3DS[addr][iKEY_X] = self.Canvas3DS[addr].create_image(416, 312, image=self.imgtk["X"])
+        self.widget_3DS[addr][iKEY_Y] = self.Canvas3DS[addr].create_image(391, 338, image=self.imgtk["Y"])
+        self.widget_3DS[addr][iKEY_A] = self.Canvas3DS[addr].create_image(442, 338, image=self.imgtk["A"])
+        self.widget_3DS[addr][iKEY_B] = self.Canvas3DS[addr].create_image(415, 364, image=self.imgtk["B"])
+
+        self.widget_3DS[addr][iKEY_padLeft] = self.Canvas3DS[addr].create_image(98, 415, image=self.imgtk["hl"])
+        self.widget_3DS[addr][iKEY_padRight] = self.Canvas3DS[addr].create_image(65, 415, image=self.imgtk["hl"])
+        self.widget_3DS[addr][iKEY_padUp] = self.Canvas3DS[addr].create_image(81, 398, image=self.imgtk["vl"])
+        self.widget_3DS[addr][iKEY_padDown] = self.Canvas3DS[addr].create_image(81, 432, image=self.imgtk["vl"])
+
+        self.widget_3DS[addr][iKEY_Select] = self.Canvas3DS[addr].create_image(178, 466, image=self.imgtk["SELECT"])
+        self.widget_3DS[addr][iKEY_Start] = self.Canvas3DS[addr].create_image(319, 466, image=self.imgtk["START"])
+
+        self.widget_3DS[addr][iKEY_Joystick] = self.Canvas3DS[addr].create_image(0, 0, image=self.imgtk["joystick"])
+        self.widget_3DS[addr][iKEY_Tap] = self.Canvas3DS[addr].create_rectangle(-2, -2, 2, 2, outline="red")
+
+        self.vjoy[addr] = pyvjoy.VJoyDevice(ID + 1)
+        self.joystickX[addr], self.joystickY[addr] = 64, 64
+        self.connected_3DS.append(addr)
 
 
     def quit(self):
@@ -228,47 +246,55 @@ class AppClass():
 
     def update_tk(self):
         while not(self.STOP):
-            try:
-                _lButtons = self.vjoy.data.lButtons
+            self.frame_Canvas_3DS.update()
+            time.sleep(0.05)
 
-                for i in range(12):
-                    self.Canvas3DS.itemconfigure(self.widget_3DS[i], state="normal" if _lButtons >> i & 1 else "hidden")
+            for addr in self.connected_3DS:
+                try:
+                    _lButtons = self.vjoy[addr].data.lButtons
 
-                ox = round((self.joystickX * 20 / 127) + 48)
-                oy = round((self.joystickY * 20 / 127) + 297)
-                self.Canvas3DS.moveto(self.widget_3DS[iKEY_Joystick], ox, oy)
+                    for i in range(12):
+                        self.Canvas3DS[addr].itemconfigure(self.widget_3DS[addr][i], state="normal" if _lButtons >> i & 1 else "hidden")
 
-                if self.Tap:
-                    WIN_X = self.WIN_p1[0] + ((self.WIN_p2[0]-self.WIN_p1[0]) / 314) * self.screenX
-                    WIN_Y = self.WIN_p1[1] + ((self.WIN_p2[1]-self.WIN_p1[1]) / 117) * self.screenY
-                    self.mouse.position = (WIN_X, WIN_Y)
-                    if not(self.mousePressed): self.mouse.press(mouse.Button.left)
+                    ox = round((self.joystickX[addr] * 20 / 127) + 48)
+                    oy = round((self.joystickY[addr] * 20 / 127) + 297)
+                    self.Canvas3DS[addr].moveto(self.widget_3DS[addr][iKEY_Joystick], ox, oy)
 
-                    DS_X = 142 + (212 / 314) * self.screenX
-                    DS_Y = 284 + (161 / 117) * self.screenY
-                    self.Canvas3DS.moveto(self.widget_3DS[iKEY_Tap], DS_X, DS_Y)
-                    self.label_coordinate.config(text = f"x={self.screenX}, y={self.screenY}")
+                    if self.Tap:
+                        WIN_X = self.WIN_p1[0] + ((self.WIN_p2[0]-self.WIN_p1[0]) / 314) * self.screenX
+                        WIN_Y = self.WIN_p1[1] + ((self.WIN_p2[1]-self.WIN_p1[1]) / 117) * self.screenY
+                        self.mouse.position = (WIN_X, WIN_Y)
+                        if not(self.mousePressed): self.mouse.press(mouse.Button.left)
 
-                    self.mousePressed = True
+                        DS_X = 142 + (212 / 314) * self.screenX
+                        DS_Y = 284 + (161 / 117) * self.screenY
+                        self.Canvas3DS[addr].moveto(self.widget_3DS[addr][iKEY_Tap], DS_X, DS_Y)
+                        self.label_coordinate.config(text = f"x={self.screenX}, y={self.screenY}")
+
+                        self.mousePressed = True
+
+                    elif self.mousePressed:
+                        self.mouse.release(mouse.Button.left)
+                        self.mouse.position = (0, 0)
+                        self.mousePressed = False
 
 
-                elif self.mousePressed:
-                    self.mouse.release(mouse.Button.left)
-                    self.mouse.position = (0, 0)
-                    self.mousePressed = False
+                except Exception as e:
+                    print("Erreur dans update_tk:")
+                    print(e)
 
-                self.Canvas3DS.update()
-                time.sleep(0.05)
 
-            except Exception as e:
-                print("function update_tk:")
-                print(e)
 
 
     def recv(self):
         while not(self.STOP):
             try:
                 data, addr = self.socket.recvfrom(512)
+                if not(addr[0] in self.connected_3DS):
+                    print(f"init {addr}")
+                    self.init_3DS(addr=addr)
+                addr = addr[0]
+
                 b = bin(int(data.hex(), base=16))[2:]
                 self.screenX = int(b[104] + b[89:97], base=2)
                 self.screenY = int(b[105:112], base=2)
@@ -276,14 +302,14 @@ class AppClass():
                 _lButton = 0
 
                 _x = int(b[57:65], base=2)
-                if b[52] == "1": self.joystickX = (_x) if (_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
-                elif b[51] == "1": self.joystickX = (_x)-127 if (_x)-127 > 0 else 0
-                else: self.joystickX = 64
+                if b[52] == "1": self.joystickX[addr] = (_x) if (_x) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                elif b[51] == "1": self.joystickX[addr] = (_x)-127 if (_x)-127 > 0 else 0
+                else: self.joystickX[addr] = 64
 
                 _y = int(b[73:81], base=2)
-                if b[50] == "1": self.joystickY = (_y)-127 if (_y)-127 > 0 else 0
-                elif b[49] == "1": self.joystickY = (_y) if (_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
-                else: self.joystickY = 64
+                if b[50] == "1": self.joystickY[addr] = (_y)-127 if (_y)-127 > 0 else 0
+                elif b[49] == "1": self.joystickY[addr] = (_y) if (_y) < 127 else 127 # la valeur 32 est subjectif, voir pour calibrer
+                else: self.joystickY[addr] = 64
 
 
                 self.Tap = True if b[44] == "1" else False
@@ -306,13 +332,19 @@ class AppClass():
 
                 #if b[8] == "1": key.append(KEY_Keyboard)
 
-                self.vjoy.data.wAxisX = self.joystickX * 256 # 32768 // 128
-                self.vjoy.data.wAxisY = self.joystickY * 256 # 32768 // 128
-                self.vjoy.data.lButtons = _lButton
-                self.vjoy.update()
+                self.vjoy[addr].data.wAxisX = self.joystickX[addr] * 256 # 32768 // 128
+                self.vjoy[addr].data.wAxisY = self.joystickY[addr] * 256 # 32768 // 128
+                self.vjoy[addr].data.lButtons = _lButton
+                self.vjoy[addr].update()
+
+            except pyvjoy.exceptions.vJoyFailedToAcquireException:
+                messagebox.showerror("Erreur lors de la connection",
+                                     f"Impossible de se connecter à la console {addr}, vérifier que vJoy est bien \n"+\
+                                     "configuré pour supporter plusieurs manette avec au moins 12 bouttons.\n\n"+\
+                                     "Quitter le logiciel sur votre console.")
 
             except Exception as e:
-                print("function recv:")
+                print("Erreur dans recv:")
                 print(e)
 
 
@@ -326,7 +358,7 @@ KEY_B, iKEY_B = 2**3, 3
 KEY_X, iKEY_X = 2**4, 4
 KEY_Y, iKEY_Y = 2**5, 5
 
-KEY_Select, iKEY_Select = 2**6, 6
+KEY_Select, iKEY_Select = 2**6,     6
 KEY_Start, iKEY_Start = 2**7, 7
 
 KEY_padLeft, iKEY_padLeft = 2**8, 8
